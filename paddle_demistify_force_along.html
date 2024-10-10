@@ -1,0 +1,97 @@
+<HEAD>
+  <!-- <SCRIPT SRC="../ganja.js"></SCRIPT> -->
+  <SCRIPT SRC="https://unpkg.com/ganja.js"></SCRIPT>
+</HEAD>
+
+<!-- I have two options:
+1. Use Ganja's graph function:
+  1.1 regenerate graph each time if an interaction occur
+  1.2 modify the basic interaction so I can relocate a line on a mouse action
+2. Use Dom to render svg like game_wedge
+Next step: 1. dynamic of boat and a const force line
+2. deminished force line -->
+
+<BODY STYLE="display:flex; flex-direction:column; max-height:100%;">
+  <SCRIPT>
+    Algebra(2, 0, 1, () => {
+      var pt = (x, y) => !(1e0 + x * 1e1 + y * 1e2),
+        vec = (x, y) => !(x * 1e1 + y * 1e2),
+        Euvec = (x, y) => (x * 1e1 + y * 1e2),
+        RK4 = (f, y, h) => {
+          var k1 = f(y), k2 = f(y + 0.5 * h * k1), k3 = f(y + 0.5 * h * k2), k4 = f(y + h * k3);
+          return y + (h / 3) * (k2 + k3 + (k1 + k4) * 0.5);
+        };
+
+      var A = pt(0,0), B = pt(0, 1)
+
+      // ellipse
+      var O = pt(0.1, 0), a = 0.3, b = 0.1
+      var curve = (pts) => pts.map((pt, i, arr) => [pt, pts[i + 1 % arr.length]])
+      var L = Element.Vector;
+      var N = 100, Nc = 30
+      var circle_pts = [...Array(Nc)].map((x, i) => () => O + vec(a * Math.cos(i * 2 * Math.PI / Nc), b * Math.sin(i * 2 * Math.PI / Nc))),
+        circle = curve(circle_pts);
+      circle.push(A)
+      // var MassPoints = [pt(-0.2, 0), pt(0, 0.1), pt(0.4, 0), pt(0, -0.1)],
+      //   circle = curve(MassPoints);
+
+      //inertia
+      var R = 1;
+      var I = 128 * 1e01 + 128 * 1e02 + 0.14e12,
+        J = (x) => x.Dual.map((x, i) => x * (I[i] || 1)),
+        Ji = (x) => x.map((x, i) => x / (I[i] || 1)).UnDual;
+      
+      var State = [1, 0e12],
+        dState = ([g, v]) => [-0.5 * g * v, Ji(forques(g, v) - 0.5 * (J(v) * v - v * J(v)))];
+
+      // var along_force = (State[0]/R) >>> L;
+      var forques = (M, B) => {
+        var Stroke = 2 * (~M >>> (State[0]/R) >>> L),
+          Damping = !(-0.7 * B);
+        return Stroke + Damping;
+      }
+
+      let canvas = this.graph(() => {
+        State = RK4(dState, State, 0.01);
+        State[0] = State[0].Normalized;
+        return [
+          0x00AA88, ...State[0] >>> circle,
+          0x444444, (State[0]/R) >>> L
+        ]
+      }, { animate: true, grid: true, lineWidth: 4 })
+      canvas.id = 'mycanvas'
+      document.body.appendChild(canvas);
+      var active = false;
+
+      var cw, ch, cx, cy, bx, by, timerId;
+
+      function mouseUpHandel(e) {
+        cw = canvas.clientWidth;
+        ch = canvas.clientHeight;
+        bx = ((e.clientX) / cw - 0.5) * 4 * (cw > ch ? (cw / ch) : 1);
+        by = ((-(e.clientY) / ch + 0.5) * 4 * (ch > cw ? (ch / cw) : 1));
+        R = State[0];
+        B = pt(bx, by);
+        let fv = Euvec(bx - cx, by - cy)
+        L = B | fv.Normalized;
+        timerId = setTimeout(function () {
+          L = Element.Vector;
+        }, 500);
+      }
+
+      function mouseDownHandel(e) {
+        if (timerId) {
+          clearTimeout(timerId);
+        }
+        cw = canvas.clientWidth;
+        ch = canvas.clientHeight;
+        cx = ((e.clientX) / cw - 0.5) * 4 * (cw > ch ? (cw / ch) : 1);
+        cy = ((-(e.clientY) / ch + 0.5) * 4 * (ch > cw ? (ch / cw) : 1));
+        // FIXME add window scale
+        canvas.addEventListener('mouseup', mouseUpHandel)
+      }
+
+      canvas.addEventListener('mousedown', mouseDownHandel);
+    })
+  </SCRIPT>
+</BODY>
