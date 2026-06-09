@@ -46,13 +46,17 @@ Next step: 1. dynamic of boat and a const force line
 
       // var along_force = (State[0]/R) >>> L;
       var forques = (M, B) => {
-        var Stroke = 6 * (~M >>> (State[0] / R) >>> L),
+        var Stroke = 4 * (~M >>> (State[0] / R) >>> L),
           Damping = !(-0.3 * B.e01 * 1e01 -1.2 * B.e02 * 1e02 - 0.9 * B.e12 * 1e12);
         return Stroke + Damping;
       }
 
+      // Use a larger integration step on mobile devices for performance
+      const isMobile = (typeof navigator !== 'undefined') && (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints || 0) > 1);
+      const rkStep = isMobile ? 0.02 : 0.01;
+
       let canvas = this.graph(() => {
-        State = RK4(dState, State, 0.01);
+        State = RK4(dState, State, rkStep);
         State[0] = State[0].Normalized;
         return [
           0x00AA88, ...State[0] >>> circle,
