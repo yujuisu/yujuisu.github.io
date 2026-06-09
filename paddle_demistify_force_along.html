@@ -46,7 +46,7 @@ Next step: 1. dynamic of boat and a const force line
 
       // var along_force = (State[0]/R) >>> L;
       var forques = (M, B) => {
-        var Stroke = 2 * (~M >>> (State[0] / R) >>> L),
+        var Stroke = 6 * (~M >>> (State[0] / R) >>> L),
           Damping = !(-0.3 * B.e01 * 1e01 -1.2 * B.e02 * 1e02 - 0.9 * B.e12 * 1e12);
         return Stroke + Damping;
       }
