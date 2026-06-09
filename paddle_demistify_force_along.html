@@ -45,9 +45,12 @@ Next step: 1. dynamic of boat and a const force line
         dState = ([g, v]) => [-0.5 * g * v, Ji(forques(g, v) - 0.5 * (J(v) * v - v * J(v)))];
 
       // var along_force = (State[0]/R) >>> L;
+      var power = 2
+      var streamline = 3
+      var rotation = 1
       var forques = (M, B) => {
-        var Stroke = 2 * (~M >>> (State[0] / R) >>> L),
-          Damping = !(-0.3 * B.e01 * 1e01 -1.2 * B.e02 * 1e02 - 0.9 * B.e12 * 1e12);
+        var Stroke = power * (~M >>> (State[0] / R) >>> L),
+          Damping = !(-1.2 / streamline * B.e01 * 1e01 - 1.2 * B.e02 * 1e02 - 1.2 / rotation * B.e12 * 1e12);
         return Stroke + Damping;
       }
 
@@ -158,6 +161,51 @@ Next step: 1. dynamic of boat and a const force line
       canvas.addEventListener('touchstart', pointerDownHandler, { passive: false });
       canvas.addEventListener('touchend', pointerUpHandler, { passive: false });
       canvas.addEventListener('touchcancel', cancelHandler, { passive: false });
+
+      var btn = document.createElement('button');
+      btn.textContent = 'back to center';
+      btn.style.cssText = 'margin:8px auto;display:block;padding:8px 18px;font-size:1rem;cursor:pointer;';
+      btn.addEventListener('click', function () { State = [1, 0e12]; });
+      document.body.appendChild(btn);
+
+      var sliderRow = document.createElement('div');
+      sliderRow.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;margin:4px auto;';
+      var sliderLabel = document.createElement('label');
+      sliderLabel.textContent = 'power:';
+      var slider = document.createElement('input');
+      slider.type = 'range'; slider.min = '0.5'; slider.max = '4'; slider.step = '0.1'; slider.value = String(power);
+      slider.style.width = '180px';
+      var sliderVal = document.createElement('span');
+      sliderVal.textContent = power.toFixed(1);
+      slider.addEventListener('input', function () { power = parseFloat(slider.value); sliderVal.textContent = power.toFixed(1); });
+      sliderRow.appendChild(sliderLabel); sliderRow.appendChild(slider); sliderRow.appendChild(sliderVal);
+      document.body.appendChild(sliderRow);
+
+      var sliderRow2 = document.createElement('div');
+      sliderRow2.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;margin:4px auto;';
+      var sliderLabel2 = document.createElement('label');
+      sliderLabel2.textContent = 'streamline:';
+      var slider2 = document.createElement('input');
+      slider2.type = 'range'; slider2.min = '1'; slider2.max = '6'; slider2.step = '0.1'; slider2.value = String(streamline);
+      slider2.style.width = '180px';
+      var sliderVal2 = document.createElement('span');
+      sliderVal2.textContent = streamline.toFixed(1);
+      slider2.addEventListener('input', function () { streamline = parseFloat(slider2.value); sliderVal2.textContent = streamline.toFixed(1); });
+      sliderRow2.appendChild(sliderLabel2); sliderRow2.appendChild(slider2); sliderRow2.appendChild(sliderVal2);
+      document.body.appendChild(sliderRow2);
+
+      var sliderRow3 = document.createElement('div');
+      sliderRow3.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;margin:4px auto;';
+      var sliderLabel3 = document.createElement('label');
+      sliderLabel3.textContent = 'rotation:';
+      var slider3 = document.createElement('input');
+      slider3.type = 'range'; slider3.min = '0.5'; slider3.max = '2'; slider3.step = '0.1'; slider3.value = String(rotation);
+      slider3.style.width = '180px';
+      var sliderVal3 = document.createElement('span');
+      sliderVal3.textContent = rotation.toFixed(1);
+      slider3.addEventListener('input', function () { rotation = parseFloat(slider3.value); sliderVal3.textContent = rotation.toFixed(1); });
+      sliderRow3.appendChild(sliderLabel3); sliderRow3.appendChild(slider3); sliderRow3.appendChild(sliderVal3);
+      document.body.appendChild(sliderRow3);
     })
   </SCRIPT>
 </BODY>
