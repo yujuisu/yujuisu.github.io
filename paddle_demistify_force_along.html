@@ -61,6 +61,35 @@ Next step: 1. dynamic of boat and a const force line
       }, { animate: true, grid: true, lineWidth: 4 })
       canvas.id = 'mycanvas'
       document.body.appendChild(canvas);
+      // Make canvas fit the device width on mobile while keeping an aspect ratio
+      function resizeCanvasToWidth() {
+        // Ensure it fills the available width
+        canvas.style.width = '100%';
+        canvas.style.maxWidth = '100vw';
+        canvas.style.display = 'block';
+        // Choose an aspect ratio (width / height). Adjust as needed.
+        const aspect = 3 / 2;
+        const cw = canvas.clientWidth || window.innerWidth;
+        const ch = Math.round(cw / aspect);
+        canvas.style.height = ch + 'px';
+
+        // If the returned element is an actual <canvas>, scale its pixel buffer for high-DPI
+        try {
+          if (canvas.tagName && canvas.tagName.toLowerCase() === 'canvas') {
+            const ratio = window.devicePixelRatio || 1;
+            canvas.width = Math.round(cw * ratio);
+            canvas.height = Math.round(ch * ratio);
+            const ctx = canvas.getContext && canvas.getContext('2d');
+            if (ctx && ctx.setTransform) ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+          }
+        } catch (err) { /* ignore if not a canvas */ }
+      }
+
+      // Initial size and on resize/orientation change
+      resizeCanvasToWidth();
+      window.addEventListener('resize', resizeCanvasToWidth);
+      window.addEventListener('orientationchange', resizeCanvasToWidth);
+
       var active = false;
 
       var cw, ch, cx, cy, bx, by, timerId;
