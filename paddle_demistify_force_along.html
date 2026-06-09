@@ -69,12 +69,19 @@ Next step: 1. dynamic of boat and a const force line
       canvas.style.touchAction = 'none';
 
       function getXYFromEvent(e) {
+        // touchend events may have an empty `touches` list; use `changedTouches` there
         if (e.touches && e.touches.length) {
-          return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+          const t = e.touches[0];
+          return { x: t.clientX, y: t.clientY };
         }
+        if (e.changedTouches && e.changedTouches.length) {
+          const t = e.changedTouches[0];
+          return { x: t.clientX, y: t.clientY };
+        }
+        // pointer/mouse events
         return { x: e.clientX, y: e.clientY };
       }
-
+      
       function pointerDownHandler(e) {
         if (timerId) { clearTimeout(timerId); timerId = null; }
         const p = getXYFromEvent(e);
