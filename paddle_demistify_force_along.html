@@ -22,7 +22,7 @@ Next step: 1. dynamic of boat and a const force line
           return y + (h / 3) * (k2 + k3 + (k1 + k4) * 0.5);
         };
 
-      var A = pt(0,0), B = pt(0, 1)
+      var A = pt(0, 0), B = pt(0, 1)
 
       // ellipse
       var O = pt(0.1, 0), a = 0.3, b = 0.1
@@ -40,13 +40,13 @@ Next step: 1. dynamic of boat and a const force line
       var I = 128 * 1e01 + 128 * 1e02 + 0.14e12,
         J = (x) => x.Dual.map((x, i) => x * (I[i] || 1)),
         Ji = (x) => x.map((x, i) => x / (I[i] || 1)).UnDual;
-      
+
       var State = [1, 0e12],
         dState = ([g, v]) => [-0.5 * g * v, Ji(forques(g, v) - 0.5 * (J(v) * v - v * J(v)))];
 
       // var along_force = (State[0]/R) >>> L;
       var forques = (M, B) => {
-        var Stroke = 2 * (~M >>> (State[0]/R) >>> L),
+        var Stroke = 2 * (~M >>> (State[0] / R) >>> L),
           Damping = !(-0.7 * B);
         return Stroke + Damping;
       }
@@ -56,7 +56,7 @@ Next step: 1. dynamic of boat and a const force line
         State[0] = State[0].Normalized;
         return [
           0x00AA88, ...State[0] >>> circle,
-          0x444444, (State[0]/R) >>> L
+          0x444444, (State[0] / R) >>> L
         ]
       }, { animate: true, grid: true, lineWidth: 4 })
       canvas.id = 'mycanvas'
@@ -65,33 +65,59 @@ Next step: 1. dynamic of boat and a const force line
 
       var cw, ch, cx, cy, bx, by, timerId;
 
-      function mouseUpHandel(e) {
+      // Allow touch/pointer interactions on mobile and desktop
+      canvas.style.touchAction = 'none';
+
+      function getXYFromEvent(e) {
+        if (e.touches && e.touches.length) {
+          return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+        return { x: e.clientX, y: e.clientY };
+      }
+
+      function pointerDownHandler(e) {
+        if (timerId) { clearTimeout(timerId); timerId = null; }
+        const p = getXYFromEvent(e);
         cw = canvas.clientWidth;
         ch = canvas.clientHeight;
-        bx = ((e.clientX) / cw - 0.5) * 4 * (cw > ch ? (cw / ch) : 1);
-        by = ((-(e.clientY) / ch + 0.5) * 4 * (ch > cw ? (ch / cw) : 1));
+        cx = ((p.x) / cw - 0.5) * 4 * (cw > ch ? (cw / ch) : 1);
+        cy = ((-(p.y) / ch + 0.5) * 4 * (ch > cw ? (ch / cw) : 1));
+        // capture pointer so we reliably get the up event
+        try { e.target && e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId); } catch (err) { }
+        if (e.preventDefault) e.preventDefault();
+      }
+
+      function pointerUpHandler(e) {
+        const p = getXYFromEvent(e);
+        cw = canvas.clientWidth;
+        ch = canvas.clientHeight;
+        bx = ((p.x) / cw - 0.5) * 4 * (cw > ch ? (cw / ch) : 1);
+        by = ((-(p.y) / ch + 0.5) * 4 * (ch > cw ? (ch / cw) : 1));
         R = State[0];
         B = pt(bx, by);
-        let fv = Euvec(bx - cx, by - cy)
+        let fv = Euvec(bx - cx, by - cy);
         L = B | fv.Normalized;
-        timerId = setTimeout(function () {
-          L = Element.Vector;
-        }, 500);
+        timerId = setTimeout(function () { L = Element.Vector; }, 500);
+        try { e.target && e.target.releasePointerCapture && e.target.releasePointerCapture(e.pointerId); } catch (err) { }
+        if (e.preventDefault) e.preventDefault();
       }
 
-      function mouseDownHandel(e) {
-        if (timerId) {
-          clearTimeout(timerId);
-        }
-        cw = canvas.clientWidth;
-        ch = canvas.clientHeight;
-        cx = ((e.clientX) / cw - 0.5) * 4 * (cw > ch ? (cw / ch) : 1);
-        cy = ((-(e.clientY) / ch + 0.5) * 4 * (ch > cw ? (ch / cw) : 1));
-        // FIXME add window scale
-        canvas.addEventListener('mouseup', mouseUpHandel)
+      function cancelHandler(e) {
+        if (timerId) { clearTimeout(timerId); timerId = null; }
+        L = Element.Vector;
+        try { e.target && e.target.releasePointerCapture && e.target.releasePointerCapture(e.pointerId); } catch (err) { }
       }
 
-      canvas.addEventListener('mousedown', mouseDownHandel);
+      // Prefer pointer events (works for mouse, touch, pen)
+      canvas.addEventListener('pointerdown', pointerDownHandler);
+      canvas.addEventListener('pointerup', pointerUpHandler);
+      canvas.addEventListener('pointercancel', cancelHandler);
+      canvas.addEventListener('pointerleave', cancelHandler);
+
+      // Fallback touch handlers for older browsers
+      canvas.addEventListener('touchstart', pointerDownHandler, { passive: false });
+      canvas.addEventListener('touchend', pointerUpHandler, { passive: false });
+      canvas.addEventListener('touchcancel', cancelHandler, { passive: false });
     })
   </SCRIPT>
 </BODY>
