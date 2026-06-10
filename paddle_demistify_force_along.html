@@ -1,6 +1,25 @@
 <HEAD>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <!-- <SCRIPT SRC="../ganja.js"></SCRIPT> -->
   <SCRIPT SRC="https://unpkg.com/ganja.js"></SCRIPT>
+  <STYLE>
+    html, body { margin:0; padding:0; overflow:hidden; width:100%; height:100%; }
+    #app { display:flex; flex-direction:row; width:100vw; height:100vh; overflow:hidden; }
+    #controls {
+      display:flex; flex-direction:column;
+      padding:8px; gap:10px;
+      width:150px; flex-shrink:0;
+      overflow-y:auto; box-sizing:border-box;
+    }
+    #canvas-wrap { flex:1; overflow:hidden; }
+    #rotate-msg {
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,0.88); color:#fff;
+      font-size:1.2rem; align-items:center; justify-content:center;
+      text-align:center; z-index:100;
+    }
+    @media (orientation:portrait) { #rotate-msg { display:flex; } }
+  </STYLE>
 </HEAD>
 
 <!-- I have two options:
@@ -11,8 +30,15 @@
 Next step: 1. dynamic of boat and a const force line
 2. deminished force line -->
 
-<BODY STYLE="display:flex; flex-direction:column; max-height:100%;">
+<BODY>
+  <div id="rotate-msg">Please rotate your device<br>to landscape mode</div>
+  <div id="app">
+    <div id="controls"></div>
+    <div id="canvas-wrap"></div>
+  </div>
   <SCRIPT>
+    try { screen.orientation.lock('landscape').catch(function(){}); } catch(e) {}
+
     Algebra(2, 0, 1, () => {
       var pt = (x, y) => !(1e0 + x * 1e1 + y * 1e2),
         vec = (x, y) => !(x * 1e1 + y * 1e2),
@@ -32,8 +58,6 @@ Next step: 1. dynamic of boat and a const force line
       var circle_pts = [...Array(Nc)].map((x, i) => () => O + vec(a * Math.cos(i * 2 * Math.PI / Nc), b * Math.sin(i * 2 * Math.PI / Nc))),
         circle = curve(circle_pts);
       circle.push(A)
-      // var MassPoints = [pt(-0.2, 0), pt(0, 0.1), pt(0.4, 0), pt(0, -0.1)],
-      //   circle = curve(MassPoints);
 
       //inertia
       var R = 1;
@@ -44,7 +68,6 @@ Next step: 1. dynamic of boat and a const force line
       var State = [1, 0e12],
         dState = ([g, v]) => [-0.5 * g * v, Ji(forques(g, v) - 0.5 * (J(v) * v - v * J(v)))];
 
-      // var along_force = (State[0]/R) >>> L;
       var power = 2
       var streamline = 3
       var rotation = 1
@@ -54,9 +77,11 @@ Next step: 1. dynamic of boat and a const force line
         return Stroke + Damping;
       }
 
-      // Use a larger integration step on mobile devices for performance
       const isMobile = (typeof navigator !== 'undefined') && (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints || 0) > 1);
       const rkStep = isMobile ? 0.02 : 0.01;
+
+      var controlsDiv = document.getElementById('controls');
+      var canvasDiv = document.getElementById('canvas-wrap');
 
       let canvas = this.graph(() => {
         State = RK4(dState, State, rkStep);
@@ -67,45 +92,33 @@ Next step: 1. dynamic of boat and a const force line
         ]
       }, { animate: true, grid: true, lineWidth: 4 })
       canvas.id = 'mycanvas'
-      document.body.appendChild(canvas);
-      // Make canvas fit the device width on mobile while keeping an aspect ratio
-      function resizeCanvasToWidth() {
-        // Ensure it fills the available width
-        canvas.style.width = '100%';
-        canvas.style.maxWidth = '100vw';
-        canvas.style.display = 'block';
-        // Choose an aspect ratio (width / height). Adjust as needed.
-        const aspect = 3 / 2;
-        const cw = canvas.clientWidth || window.innerWidth;
-        const ch = Math.round(cw / aspect);
-        canvas.style.height = ch + 'px';
+      canvasDiv.appendChild(canvas);
 
-        // If the returned element is an actual <canvas>, scale its pixel buffer for high-DPI
+      function resizeCanvas() {
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.display = 'block';
         try {
           if (canvas.tagName && canvas.tagName.toLowerCase() === 'canvas') {
             const ratio = window.devicePixelRatio || 1;
+            const cw = canvasDiv.clientWidth || window.innerWidth;
+            const ch = canvasDiv.clientHeight || window.innerHeight;
             canvas.width = Math.round(cw * ratio);
             canvas.height = Math.round(ch * ratio);
             const ctx = canvas.getContext && canvas.getContext('2d');
             if (ctx && ctx.setTransform) ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
           }
-        } catch (err) { /* ignore if not a canvas */ }
+        } catch (err) { }
       }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+      window.addEventListener('orientationchange', resizeCanvas);
 
-      // Initial size and on resize/orientation change
-      resizeCanvasToWidth();
-      window.addEventListener('resize', resizeCanvasToWidth);
-      window.addEventListener('orientationchange', resizeCanvasToWidth);
+      var cx, cy, bx, by, timerId;
 
-      var active = false;
-
-      var cw, ch, cx, cy, bx, by, timerId;
-
-      // Allow touch/pointer interactions on mobile and desktop
       canvas.style.touchAction = 'none';
 
       function getXYFromEvent(e) {
-        // touchend events may have an empty `touches` list; use `changedTouches` there
         if (e.touches && e.touches.length) {
           const t = e.touches[0];
           return { x: t.clientX, y: t.clientY };
@@ -114,28 +127,31 @@ Next step: 1. dynamic of boat and a const force line
           const t = e.changedTouches[0];
           return { x: t.clientX, y: t.clientY };
         }
-        // pointer/mouse events
         return { x: e.clientX, y: e.clientY };
+      }
+
+      function canvasCoords(p) {
+        var rect = canvas.getBoundingClientRect();
+        var rx = (p.x - rect.left) / rect.width;
+        var ry = (p.y - rect.top) / rect.height;
+        var w = rect.width, h = rect.height;
+        return {
+          x: (rx - 0.5) * 4 * (w > h ? (w / h) : 1),
+          y: (-ry + 0.5) * 4 * (h > w ? (h / w) : 1)
+        };
       }
 
       function pointerDownHandler(e) {
         if (timerId) { clearTimeout(timerId); timerId = null; }
-        const p = getXYFromEvent(e);
-        cw = canvas.clientWidth;
-        ch = canvas.clientHeight;
-        cx = ((p.x) / cw - 0.5) * 4 * (cw > ch ? (cw / ch) : 1);
-        cy = ((-(p.y) / ch + 0.5) * 4 * (ch > cw ? (ch / cw) : 1));
-        // capture pointer so we reliably get the up event
+        var c = canvasCoords(getXYFromEvent(e));
+        cx = c.x; cy = c.y;
         try { e.target && e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId); } catch (err) { }
         if (e.preventDefault) e.preventDefault();
       }
 
       function pointerUpHandler(e) {
-        const p = getXYFromEvent(e);
-        cw = canvas.clientWidth;
-        ch = canvas.clientHeight;
-        bx = ((p.x) / cw - 0.5) * 4 * (cw > ch ? (cw / ch) : 1);
-        by = ((-(p.y) / ch + 0.5) * 4 * (ch > cw ? (ch / cw) : 1));
+        var c = canvasCoords(getXYFromEvent(e));
+        bx = c.x; by = c.y;
         R = State[0];
         B = pt(bx, by);
         let fv = Euvec(bx - cx, by - cy);
@@ -151,61 +167,40 @@ Next step: 1. dynamic of boat and a const force line
         try { e.target && e.target.releasePointerCapture && e.target.releasePointerCapture(e.pointerId); } catch (err) { }
       }
 
-      // Prefer pointer events (works for mouse, touch, pen)
       canvas.addEventListener('pointerdown', pointerDownHandler);
       canvas.addEventListener('pointerup', pointerUpHandler);
       canvas.addEventListener('pointercancel', cancelHandler);
       canvas.addEventListener('pointerleave', cancelHandler);
-
-      // Fallback touch handlers for older browsers
       canvas.addEventListener('touchstart', pointerDownHandler, { passive: false });
       canvas.addEventListener('touchend', pointerUpHandler, { passive: false });
       canvas.addEventListener('touchcancel', cancelHandler, { passive: false });
 
+      function makeSlider(labelText, min, max, step, initVal, onChange) {
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
+        var header = document.createElement('div');
+        header.style.cssText = 'display:flex;justify-content:space-between;font-size:0.85rem;';
+        var lbl = document.createElement('span'); lbl.textContent = labelText;
+        var val = document.createElement('span'); val.textContent = initVal.toFixed(1);
+        header.appendChild(lbl); header.appendChild(val);
+        var input = document.createElement('input');
+        input.type = 'range'; input.min = String(min); input.max = String(max);
+        input.step = String(step); input.value = String(initVal);
+        input.style.width = '100%';
+        input.addEventListener('input', function () { var v = parseFloat(input.value); val.textContent = v.toFixed(1); onChange(v); });
+        wrap.appendChild(header); wrap.appendChild(input);
+        return wrap;
+      }
+
       var btn = document.createElement('button');
       btn.textContent = 'back to center';
-      btn.style.cssText = 'margin:8px auto;display:block;padding:8px 18px;font-size:1rem;cursor:pointer;';
+      btn.style.cssText = 'padding:8px;font-size:0.9rem;cursor:pointer;width:100%;';
       btn.addEventListener('click', function () { State = [1, 0e12]; });
-      document.body.appendChild(btn);
 
-      var sliderRow = document.createElement('div');
-      sliderRow.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;margin:4px auto;';
-      var sliderLabel = document.createElement('label');
-      sliderLabel.textContent = 'power:';
-      var slider = document.createElement('input');
-      slider.type = 'range'; slider.min = '0.5'; slider.max = '4'; slider.step = '0.1'; slider.value = String(power);
-      slider.style.width = '180px';
-      var sliderVal = document.createElement('span');
-      sliderVal.textContent = power.toFixed(1);
-      slider.addEventListener('input', function () { power = parseFloat(slider.value); sliderVal.textContent = power.toFixed(1); });
-      sliderRow.appendChild(sliderLabel); sliderRow.appendChild(slider); sliderRow.appendChild(sliderVal);
-      document.body.appendChild(sliderRow);
-
-      var sliderRow2 = document.createElement('div');
-      sliderRow2.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;margin:4px auto;';
-      var sliderLabel2 = document.createElement('label');
-      sliderLabel2.textContent = 'streamline:';
-      var slider2 = document.createElement('input');
-      slider2.type = 'range'; slider2.min = '1'; slider2.max = '6'; slider2.step = '0.1'; slider2.value = String(streamline);
-      slider2.style.width = '180px';
-      var sliderVal2 = document.createElement('span');
-      sliderVal2.textContent = streamline.toFixed(1);
-      slider2.addEventListener('input', function () { streamline = parseFloat(slider2.value); sliderVal2.textContent = streamline.toFixed(1); });
-      sliderRow2.appendChild(sliderLabel2); sliderRow2.appendChild(slider2); sliderRow2.appendChild(sliderVal2);
-      document.body.appendChild(sliderRow2);
-
-      var sliderRow3 = document.createElement('div');
-      sliderRow3.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;margin:4px auto;';
-      var sliderLabel3 = document.createElement('label');
-      sliderLabel3.textContent = 'rotation:';
-      var slider3 = document.createElement('input');
-      slider3.type = 'range'; slider3.min = '0.5'; slider3.max = '2'; slider3.step = '0.1'; slider3.value = String(rotation);
-      slider3.style.width = '180px';
-      var sliderVal3 = document.createElement('span');
-      sliderVal3.textContent = rotation.toFixed(1);
-      slider3.addEventListener('input', function () { rotation = parseFloat(slider3.value); sliderVal3.textContent = rotation.toFixed(1); });
-      sliderRow3.appendChild(sliderLabel3); sliderRow3.appendChild(slider3); sliderRow3.appendChild(sliderVal3);
-      document.body.appendChild(sliderRow3);
+      controlsDiv.appendChild(btn);
+      controlsDiv.appendChild(makeSlider('power', 0.5, 4, 0.1, power, function (v) { power = v; }));
+      controlsDiv.appendChild(makeSlider('streamline', 1, 6, 0.1, streamline, function (v) { streamline = v; }));
+      controlsDiv.appendChild(makeSlider('rotation', 0.5, 2, 0.1, rotation, function (v) { rotation = v; }));
     })
   </SCRIPT>
 </BODY>
