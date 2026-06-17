@@ -3,22 +3,57 @@
   <!-- <SCRIPT SRC="../ganja.js"></SCRIPT> -->
   <SCRIPT SRC="https://unpkg.com/ganja.js"></SCRIPT>
   <STYLE>
-    html, body { margin:0; padding:0; overflow:hidden; width:100%; height:100%; }
-    #app { display:flex; flex-direction:row; width:100vw; height:100vh; overflow:hidden; }
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: row;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
     #controls {
-      display:flex; flex-direction:column;
-      padding:8px; gap:10px;
-      width:150px; flex-shrink:0;
-      overflow-y:auto; box-sizing:border-box;
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+      gap: 10px;
+      width: 150px;
+      flex-shrink: 0;
+      overflow-y: auto;
+      box-sizing: border-box;
     }
-    #canvas-wrap { flex:1; overflow:hidden; }
+
+    #canvas-wrap {
+      flex: 1;
+      overflow: hidden;
+    }
+
     #rotate-msg {
-      display:none; position:fixed; inset:0;
-      background:rgba(0,0,0,0.88); color:#fff;
-      font-size:1.2rem; align-items:center; justify-content:center;
-      text-align:center; z-index:100;
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      color: #fff;
+      font-size: 1.2rem;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 100;
     }
-    @media (orientation:portrait) { #rotate-msg { display:flex; } }
+
+    @media (orientation:portrait) {
+      #rotate-msg {
+        display: flex;
+      }
+    }
   </STYLE>
 </HEAD>
 
@@ -37,7 +72,7 @@ Next step: 1. dynamic of boat and a const force line
     <div id="canvas-wrap"></div>
   </div>
   <SCRIPT>
-    try { screen.orientation.lock('landscape').catch(function(){}); } catch(e) {}
+    try { screen.orientation.lock('landscape').catch(function () { }); } catch (e) { }
 
     Algebra(2, 0, 1, () => {
       var pt = (x, y) => !(1e0 + x * 1e1 + y * 1e2),
@@ -54,6 +89,7 @@ Next step: 1. dynamic of boat and a const force line
       var O = pt(0.1, 0), a = 0.3, b = 0.1
       var curve = (pts) => pts.map((pt, i, arr) => [pt, pts[i + 1 % arr.length]])
       var L = Element.Vector;
+      var line = Element.Vector;
       var N = 100, Nc = 30
       var circle_pts = [...Array(Nc)].map((x, i) => () => O + vec(a * Math.cos(i * 2 * Math.PI / Nc), b * Math.sin(i * 2 * Math.PI / Nc))),
         circle = curve(circle_pts);
@@ -69,11 +105,13 @@ Next step: 1. dynamic of boat and a const force line
         dState = ([g, v]) => [-0.5 * g * v, Ji(forques(g, v) - 0.5 * (J(v) * v - v * J(v)))];
 
       var power = 2
-      var streamline = 3
+      var streamline = 1
       var rotation = 1
+      var lateral = 8
+      var strokeTime = 500
       var forques = (M, B) => {
-        var Stroke = power * (~M >>> (State[0] / R) >>> L),
-          Damping = !(-1.2 / streamline * B.e01 * 1e01 - 1.2 * B.e02 * 1e02 - 1.2 / rotation * B.e12 * 1e12);
+        var Stroke = power * (~M >>> line),
+          Damping = !(-streamline * B.e01 * 1e01 - lateral * B.e02 * 1e02 - rotation * B.e12 * 1e12);
         return Stroke + Damping;
       }
 
@@ -82,13 +120,14 @@ Next step: 1. dynamic of boat and a const force line
 
       var controlsDiv = document.getElementById('controls');
       var canvasDiv = document.getElementById('canvas-wrap');
+      line = ()=> L
 
       let canvas = this.graph(() => {
         State = RK4(dState, State, rkStep);
         State[0] = State[0].Normalized;
         return [
           0x00AA88, ...State[0] >>> circle,
-          0x444444, (State[0] / R) >>> L
+          0x444444, line
         ]
       }, { animate: true, grid: true, lineWidth: 4 })
       canvas.id = 'mycanvas'
@@ -156,7 +195,7 @@ Next step: 1. dynamic of boat and a const force line
         B = pt(bx, by);
         let fv = Euvec(bx - cx, by - cy);
         L = B | fv.Normalized;
-        timerId = setTimeout(function () { L = Element.Vector; }, 500);
+        timerId = setTimeout(function () { L = Element.Vector; }, strokeTime);
         try { e.target && e.target.releasePointerCapture && e.target.releasePointerCapture(e.pointerId); } catch (err) { }
         if (e.preventDefault) e.preventDefault();
       }
@@ -191,16 +230,22 @@ Next step: 1. dynamic of boat and a const force line
         wrap.appendChild(header); wrap.appendChild(input);
         return wrap;
       }
+      function makeButton(labelText, event) {
+        var btn = document.createElement('button');
+        btn.textContent = labelText;
+        btn.style.cssText = 'padding:8px;font-size:0.9rem;cursor:pointer;width:100%;';
+        btn.addEventListener('click', event);
+        return btn;
+      }
 
-      var btn = document.createElement('button');
-      btn.textContent = 'back to center';
-      btn.style.cssText = 'padding:8px;font-size:0.9rem;cursor:pointer;width:100%;';
-      btn.addEventListener('click', function () { State = [1, 0e12]; });
-
-      controlsDiv.appendChild(btn);
+      controlsDiv.appendChild(makeButton('back to center', function () { State = [1, 0e12]; }));
+      controlsDiv.appendChild(makeButton('sweep', function () { line = ()=>(~(State[0] / R)) >>> L; strokeTime = 1000;}));
+      controlsDiv.appendChild(makeButton('forward', function () { line = ()=>L; strokeTime = 500;}));
+      controlsDiv.appendChild(makeButton('draw', function () { line = ()=>(State[0] / R) >>> L; strokeTime = 1000;}));
+      controlsDiv.appendChild(makeSlider('lateral drag', 1, 15, 0.2, lateral, function (v) { power = v; }));
       controlsDiv.appendChild(makeSlider('power', 0.5, 4, 0.1, power, function (v) { power = v; }));
-      controlsDiv.appendChild(makeSlider('streamline', 1, 6, 0.1, streamline, function (v) { streamline = v; }));
-      controlsDiv.appendChild(makeSlider('rotation', 0.5, 2, 0.1, rotation, function (v) { rotation = v; }));
+      controlsDiv.appendChild(makeSlider('streamline drag', 0.1, 4, 0.1, streamline, function (v) { streamline = v; }));
+      controlsDiv.appendChild(makeSlider('rotation drag', 0.1, 4, 0.1, rotation, function (v) { rotation = v; }));
     })
   </SCRIPT>
 </BODY>
