@@ -244,7 +244,7 @@ Next step: 1. dynamic of boat and a const force line
       controlsDiv.appendChild(makeButton('draw', function () { line = ()=>(State[0] / R) >>> L; }));
       controlsDiv.appendChild(makeSlider('stroke duration', 300, 2000, 50, strokeTime, function (v) { strokeTime = v; }));
       controlsDiv.appendChild(makeSlider('time step', 0.005, 0.04, 0.002, rkStep, function (v) { rkStep = v; }));
-      controlsDiv.appendChild(makeSlider('lateral drag', 1, 15, 0.2, lateral, function (v) { power = v; }));
+      controlsDiv.appendChild(makeSlider('lateral drag', 1, 15, 0.2, lateral, function (v) { lateral = v; }));
       controlsDiv.appendChild(makeSlider('power', 0.5, 4, 0.1, power, function (v) { power = v; }));
       controlsDiv.appendChild(makeSlider('streamline drag', 0.1, 4, 0.1, streamline, function (v) { streamline = v; }));
       controlsDiv.appendChild(makeSlider('rotation drag', 0.1, 4, 0.1, rotation, function (v) { rotation = v; }));
