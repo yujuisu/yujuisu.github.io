@@ -220,13 +220,13 @@ Next step: 1. dynamic of boat and a const force line
         var header = document.createElement('div');
         header.style.cssText = 'display:flex;justify-content:space-between;font-size:0.85rem;';
         var lbl = document.createElement('span'); lbl.textContent = labelText;
-        var val = document.createElement('span'); val.textContent = initVal.toFixed(1);
+        var val = document.createElement('span'); val.textContent = initVal.toFixed(2);
         header.appendChild(lbl); header.appendChild(val);
         var input = document.createElement('input');
         input.type = 'range'; input.min = String(min); input.max = String(max);
         input.step = String(step); input.value = String(initVal);
         input.style.width = '100%';
-        input.addEventListener('input', function () { var v = parseFloat(input.value); val.textContent = v.toFixed(3); onChange(v); });
+        input.addEventListener('input', function () { var v = parseFloat(input.value); val.textContent = v.toFixed(2); onChange(v); });
         wrap.appendChild(header); wrap.appendChild(input);
         return wrap;
       }
