@@ -240,7 +240,7 @@ Next step: 1. dynamic of boat and a const force line
 
       controlsDiv.appendChild(makeButton('back to center', function () { State = [1, 0e12]; }));
       controlsDiv.appendChild(makeButton('sweep', function () { line = ()=>(~(State[0] / R)) >>> L; }));
-      controlsDiv.appendChild(makeButton('forward', function () { line = ()=>L; strokeTime = 500; }));
+      controlsDiv.appendChild(makeButton('forward', function () { line = ()=>L; }));
       controlsDiv.appendChild(makeButton('draw', function () { line = ()=>(State[0] / R) >>> L; }));
       controlsDiv.appendChild(makeSlider('stroke duration', 300, 2000, 50, strokeTime, function (v) { strokeTime = v; }));
       controlsDiv.appendChild(makeSlider('time step', 0.005, 0.04, 0.002, rkStep, function (v) { rkStep = v; }));
