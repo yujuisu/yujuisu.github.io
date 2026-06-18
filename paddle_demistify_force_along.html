@@ -226,7 +226,7 @@ Next step: 1. dynamic of boat and a const force line
         input.type = 'range'; input.min = String(min); input.max = String(max);
         input.step = String(step); input.value = String(initVal);
         input.style.width = '100%';
-        input.addEventListener('input', function () { var v = parseFloat(input.value); val.textContent = v.toFixed(1); onChange(v); });
+        input.addEventListener('input', function () { var v = parseFloat(input.value); val.textContent = v.toFixed(3); onChange(v); });
         wrap.appendChild(header); wrap.appendChild(input);
         return wrap;
       }
@@ -239,9 +239,11 @@ Next step: 1. dynamic of boat and a const force line
       }
 
       controlsDiv.appendChild(makeButton('back to center', function () { State = [1, 0e12]; }));
-      controlsDiv.appendChild(makeButton('sweep', function () { line = ()=>(~(State[0] / R)) >>> L; strokeTime = 1000;}));
-      controlsDiv.appendChild(makeButton('forward', function () { line = ()=>L; strokeTime = 500;}));
-      controlsDiv.appendChild(makeButton('draw', function () { line = ()=>(State[0] / R) >>> L; strokeTime = 1000;}));
+      controlsDiv.appendChild(makeButton('sweep', function () { line = ()=>(~(State[0] / R)) >>> L; }));
+      controlsDiv.appendChild(makeButton('forward', function () { line = ()=>L; strokeTime = 500; }));
+      controlsDiv.appendChild(makeButton('draw', function () { line = ()=>(State[0] / R) >>> L; }));
+      controlsDiv.appendChild(makeSlider('stroke duration', 300, 2000, 50, strokeTime, function (v) { strokeTime = v; }));
+      controlsDiv.appendChild(makeSlider('time step', 0.005, 0.04, 0.002, rkStep, function (v) { rkStep = v; }));
       controlsDiv.appendChild(makeSlider('lateral drag', 1, 15, 0.2, lateral, function (v) { power = v; }));
       controlsDiv.appendChild(makeSlider('power', 0.5, 4, 0.1, power, function (v) { power = v; }));
       controlsDiv.appendChild(makeSlider('streamline drag', 0.1, 4, 0.1, streamline, function (v) { streamline = v; }));
