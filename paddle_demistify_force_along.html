@@ -116,7 +116,7 @@ Next step: 1. dynamic of boat and a const force line
       }
 
       const isMobile = (typeof navigator !== 'undefined') && (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints || 0) > 1);
-      const rkStep = isMobile ? 0.02 : 0.01;
+      var rkStep = isMobile ? 0.02 : 0.01;
 
       var controlsDiv = document.getElementById('controls');
       var canvasDiv = document.getElementById('canvas-wrap');
