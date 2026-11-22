@@ -109,25 +109,32 @@ Next step: 1. dynamic of boat and a const force line
       var rotation = 1
       var lateral = 8
       var strokeTime = 500
+      var dragOffset = 0.25
       var forques = (M, B) => {
         var Stroke = power * (~M >>> line),
-          Damping = !(-streamline * B.e01 * 1e01 - lateral * B.e02 * 1e02 - rotation * B.e12 * 1e12);
+          Damping = (1 - dragOffset*1e01) >>> !(-streamline * B.e01 * 1e01 - lateral * (B.e02) * 1e02 - rotation * (B.e12) * 1e12);
+        // lastStroke = Stroke; lastDamping = Damping;
         return Stroke + Damping;
       }
+      // var lastStroke = 0, lastDamping = 0;
+
 
       const isMobile = (typeof navigator !== 'undefined') && (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints || 0) > 1);
       var rkStep = isMobile ? 0.02 : 0.01;
 
       var controlsDiv = document.getElementById('controls');
       var canvasDiv = document.getElementById('canvas-wrap');
-      line = ()=> L
+      line = () => L
 
       let canvas = this.graph(() => {
         State = RK4(dState, State, rkStep);
         State[0] = State[0].Normalized;
         return [
           0x00AA88, ...State[0] >>> circle,
-          0x444444, line
+          0x444444, line,
+          0x000000,
+          // pt(-1.8, 1.8), "Stroke: " + lastStroke.toString(),
+          // pt(-1.8, 1.6), "Damping: " + lastDamping.toString()
         ]
       }, { animate: true, grid: true, lineWidth: 4 })
       canvas.id = 'mycanvas'
@@ -239,15 +246,16 @@ Next step: 1. dynamic of boat and a const force line
       }
 
       controlsDiv.appendChild(makeButton('back to center', function () { State = [1, 0e12]; }));
-      controlsDiv.appendChild(makeButton('sweep', function () { line = ()=>(~(State[0] / R)) >>> L; }));
-      controlsDiv.appendChild(makeButton('forward', function () { line = ()=>L; }));
-      controlsDiv.appendChild(makeButton('draw', function () { line = ()=>(State[0] / R) >>> L; }));
+      controlsDiv.appendChild(makeButton('sweep', function () { line = () => (~(State[0] / R)) >>> L; }));
+      controlsDiv.appendChild(makeButton('forward', function () { line = () => L; }));
+      controlsDiv.appendChild(makeButton('draw', function () { line = () => (State[0] / R) >>> L; }));
       controlsDiv.appendChild(makeSlider('stroke duration', 300, 2000, 50, strokeTime, function (v) { strokeTime = v; }));
       controlsDiv.appendChild(makeSlider('time step', 0.005, 0.04, 0.002, rkStep, function (v) { rkStep = v; }));
       controlsDiv.appendChild(makeSlider('lateral drag', 1, 15, 0.2, lateral, function (v) { lateral = v; }));
       controlsDiv.appendChild(makeSlider('power', 0.5, 4, 0.1, power, function (v) { power = v; }));
       controlsDiv.appendChild(makeSlider('streamline drag', 0.1, 4, 0.1, streamline, function (v) { streamline = v; }));
       controlsDiv.appendChild(makeSlider('rotation drag', 0.1, 4, 0.1, rotation, function (v) { rotation = v; }));
+      controlsDiv.appendChild(makeSlider('drag offset', -1, 1, 0.1, dragOffset, function (v) { dragOffset = v; }));
     })
   </SCRIPT>
 </BODY>
