@@ -171,8 +171,8 @@
         </p>
 
         <p>
-            The dual also gives us a freedom: the choice of dual decides which center the drag is measured about.
-            Here we simply use the algebra's default dual, whose center sits at the origin (zero) of the boat's
+            The dual also gives us a freedom: the choice of dual is artificial but decides which center the drag is measured about.
+            In Ganja.js, the dual depends on the base, whose center sits at the origin (zero) of the boat's
             frame. In the next section we will move this center.
         </p>
 
@@ -190,8 +190,8 @@
         </p>
 
         <p>
-            Though the dual center is just an artificial choice. Here we
-            shift the dual's center by an offset \(\delta\) along the boat's long axis: the velocity is first shifted
+            Recall that we can
+            shift the dual's center as we wish. Here we choose an offset \(\delta\) along the boat's long axis (usually boats are left-right-symmetric): the velocity is first shifted
             to \(V'\), and the drag is then computed from \(V'\) exactly as before. This moves the drag center
             relative to the momentum center.
         </p>
