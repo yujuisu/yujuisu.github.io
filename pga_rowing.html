@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Rowing as a Rigid-Body System in PGA</title>
+    <script>
+        window.MathJax = { tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] } };
+    </script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <style>
+        body {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 24px 16px 80px;
+            font-family: Georgia, "Times New Roman", serif;
+            line-height: 1.7;
+            color: #222;
+        }
+
+        h1 {
+            line-height: 1.25;
+        }
+
+        h2 {
+            margin-top: 2.2em;
+        }
+
+        .demo {
+            margin: 1.5em 0 0.5em;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .demo iframe {
+            display: block;
+            width: 100%;
+            height: 420px;
+            border: 0;
+        }
+
+        figcaption {
+            font-size: 0.9rem;
+            color: #666;
+            margin: 0 0 1.5em;
+        }
+
+        h3 {
+            margin-top: 1.8em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.2em 0 1.8em;
+            font-size: 0.92rem;
+            line-height: 1.5;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        th,
+        td {
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        thead th {
+            background: #2b4a5a;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f6f8f9;
+        }
+
+        tbody tr:hover {
+            background: #eaf2f5;
+        }
+
+        tbody td:first-child {
+            width: 18%;
+            background: #eef2f4;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 640px) {
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            tbody td:first-child {
+                white-space: normal;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <article>
+        <h1>Simplifying Rowing into a Rigid-Body Dynamical System in Plane-based Geometric Algebra</h1>
+
+        <h2>1. Force as a line</h2>
+
+        <p>
+            One of the most fascinating aspects of Plane-based Geometric Algebra (PGA) is that
+            geometric objects, such as points and lines, also represent transformations, such as
+            rotations and reflections. Can we imagine the "force" of rowing as a geometric object?
+        </p>
+
+        <p>
+            For a rigid body, we describe a force using a direction and a point of application
+            (a starting point). A direction and a point determine a line. When we slide the point
+            of application along this line, the effect on the rigid body stays the same. So here,
+            let's treat a force as a <strong>line</strong>.
+        </p>
+
+        <p>\[ F = P \vee \mathbf{d} \qquad (P \to P + t\,\mathbf{d} \;\Rightarrow\; F \text{ unchanged}) \]</p>
+
+        <figure class="demo">
+            <iframe src="paddle_demistify_force_along.html?stage=0" loading="lazy" title="Force as a line"></iframe>
+        </figure>
+        <figcaption>
+            Drag on the canvas to apply a force: the starting point and the drag direction define the line.
+            Release to let the boat respond.
+        </figcaption>
+
+        <h2>2. Types of strokes</h2>
+
+        <p>
+            The stroke line can change along with the boat or counter-change along with it.
+            Try the three modes: <em>forward</em> keeps the line fixed in the world,
+            <em>draw</em> carries it along with the boat, and <em>sweep</em> moves it against the boat's motion.
+        </p>
+
+        <p>\[ F_{\text{stroke}} = p\,\widetilde{M}\,L\,M, \qquad L_{\text{forward}} = L, \quad L_{\text{draw}}
+            = \Delta\,L\,\widetilde{\Delta}, \quad L_{\text{sweep}} = \widetilde{\Delta}\,L\,\Delta, \quad \Delta =
+            M_t\,\widetilde{M}_{t-1} \]</p>
+
+        <p>
+            Here \(\Delta\) is the motion between two discrete states of the boat: the current state \(M_t\) and an
+            earlier state \(M_{t-1}\) (in the demo, the pose saved when the stroke is released).
+        </p>
+
+        <figure class="demo">
+            <iframe src="paddle_demistify_force_along.html?stage=1" loading="lazy" title="Types of strokes"></iframe>
+        </figure>
+
+        <h2>3. Streamline as a drag scale offset</h2>
+
+        <p>
+            Water resists motion differently along each direction of the hull. Streamline, lateral and rotational
+            drag are separate scales applied to the velocity components.
+        </p>
+
+        <p>\[ F_{\text{drag}} = -\left( k_s\,v_{01}\,\mathbf{e}_{01} + k_l\,v_{02}\,\mathbf{e}_{02} +
+            k_r\,v_{12}\,\mathbf{e}_{12} \right)^{\star} \]</p>
+
+        <p>
+            Why the dual? Velocity \(V\) is a bivector (a point in 2D PGA: a center of rotation, or an ideal point for
+            pure translation), while a force is a vector (a line). They are different grades, so the drag must map one
+            into the other, and the dual does exactly that. The minus sign makes the drag oppose the motion.
+        </p>
+
+        <p>
+            The dual also gives us a freedom: the choice of dual decides which center the drag is measured about.
+            Here we simply use the algebra's default dual, whose center sits at the origin (zero) of the boat's
+            frame. In the next section we will move this center.
+        </p>
+
+        <figure class="demo">
+            <iframe src="paddle_demistify_force_along.html?stage=2" loading="lazy" title="Streamline drag"></iframe>
+        </figure>
+
+        <h2>4. Where is the hydrodynamic drag center?</h2>
+
+        <h3>Kayak Hull Dynamics: Drag Center vs. Momentum Center</h3>
+        <p>
+            The relative positions of the <strong>Drag Center (Center of Lateral Resistance, CLR)</strong> and the
+            <strong>Momentum Center (Center of Mass, CoM)</strong> dictate how a kayak turns, tracks, and stops
+            rotating:
+        </p>
+
+        <p>
+            Though the dual center is just an artificial choice. Here we
+            shift the dual's center by an offset \(\delta\) along the boat's long axis: the velocity is first shifted
+            to \(V'\), and the drag is then computed from \(V'\) exactly as before. This moves the drag center
+            relative to the momentum center.
+        </p>
+        <p>\[ V' = T\,V\,\widetilde{T}, \quad T = 1 + \,\delta\,\mathbf{e}_{01}, \qquad F_{\text{drag}} = -\left(
+            k_s\,v'_{01}\,\mathbf{e}_{01} + k_l\,v'_{02}\,\mathbf{e}_{02} + k_r\,v'_{12}\,\mathbf{e}_{12}
+            \right)^{\star} \]</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Whitewater Kayak</th>
+                    <th>Sea Kayak</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Geometry</strong></td>
+                    <td><strong>CLR in front of CoM</strong> (forward bow volume, high rocker)</td>
+                    <td><strong>CLR behind CoM</strong> (long keel, skeg/rudder, low rocker)</td>
+                </tr>
+                <tr>
+                    <td><strong>Directional Stability</strong></td>
+                    <td><strong>Unstable</strong> (actively tries to spin out)</td>
+                    <td><strong>Stable</strong> (naturally weathercocks/tracks straight)</td>
+                </tr>
+                <tr>
+                    <td><strong>Initiating a Turn</strong></td>
+                    <td><strong>Effortless</strong> — water pressure on the bow amplifies any small angle into a carve
+                    </td>
+                    <td><strong>Resistant</strong> — hull fights against being pushed off its straight line</td>
+                </tr>
+                <tr>
+                    <td><strong>Canceling a Turn</strong></td>
+                    <td><strong>Hard</strong> — forward torque keeps feeding the spin; requires active stern strokes or
+                        edge shifts</td>
+                    <td><strong>Easy</strong> — water pressure on the stern passively pulls the boat back in line</td>
+                </tr>
+                <tr>
+                    <td><strong>Primary Advantage</strong></td>
+                    <td>Rapid micro-adjustments, tight pivots, and snapping across eddy lines</td>
+                    <td>Effortless straight-line tracking over long distances in wind and waves</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <figure class="demo">
+            <iframe src="paddle_demistify_force_along.html?stage=3" loading="lazy" title="Drag center"></iframe>
+        </figure>
+
+        <h2>5. Playground</h2>
+
+        <p>
+            Now everything is in your hands: pick a stroke type, adjust the stroke duration and power,
+            tune the streamline, lateral and rotation drag, and move the drag center.
+            Drag on the canvas to paddle.
+        </p>
+
+        <p>\[ \dot{M} = -\tfrac12\, M\,V, \qquad \dot{V} = \mathbb{J}^{-1}\!\left( F_{\text{stroke}} + F_{\text{drag}} -
+            \tfrac12 \left( \mathbb{J}(V)\,V - V\,\mathbb{J}(V) \right) \right) \]</p>
+
+        <figure class="demo">
+            <iframe src="paddle_demistify_force_along.html?stage=4" loading="lazy" title="Playground"
+                style="height: 520px;"></iframe>
+        </figure>
+    </article>
+</body>
+
+</html>
