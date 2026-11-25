@@ -105,7 +105,7 @@ Next step: 1. dynamic of boat and a const force line
         dState = ([g, v]) => [-0.5 * g * v, Ji(forques(g, v) - 0.5 * (J(v) * v - v * J(v)))];
 
       // stage 0: force as a line | 1: stroke types | 2: anisotropic drag | 3: drag center | 4: playground (all controls)
-      var stage = parseInt(new URLSearchParams(location.search).get('stage') ?? '3', 10);
+      var stage = parseInt(new URLSearchParams(location.search).get('stage') ?? '4', 10);
       var power = 2
       var streamline = 1
       var rotation = 1
