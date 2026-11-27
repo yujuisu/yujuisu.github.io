@@ -112,11 +112,20 @@ Next step: 1. dynamic of boat and a const force line
       var lateral = 8
       var strokeTime = stage >= 1 ? 1000 : 500
       var dragOffset = 0.25
+      var showDamping = false
+      window.addEventListener('message', function (event) {
+        if (event.source === window.parent && event.data && event.data.type === 'show-damping' && typeof event.data.visible === 'boolean') {
+          showDamping = event.data.visible;
+        }
+      });
+      var damping = (B) => {
+        var Bs = stage >= 3 ? (1 + dragOffset * 0.3e01) >>> B : B;
+        return stage < 2 ? !(-B)
+          : !(-streamline * Bs.e01 * 1e01 - lateral * (Bs.e02) * 1e02 - rotation * (Bs.e12) * 1e12);
+      }
       var forques = (M, B) => {
         var Stroke = power * (~M >>> line),
-          Bs = stage >= 3 ? (1 + dragOffset * 0.3e01) >>> B : B,
-          Damping = stage < 2 ? !(-B)
-            : !(-streamline * Bs.e01 * 1e01 - lateral * (Bs.e02) * 1e02 - rotation * (Bs.e12) * 1e12);
+          Damping = damping(B);
         // lastStroke = Stroke; lastDamping = Damping;
         return Stroke + Damping;
       }
@@ -133,13 +142,22 @@ Next step: 1. dynamic of boat and a const force line
       let canvas = this.graph(() => {
         State = RK4(dState, State, rkStep);
         State[0] = State[0].Normalized;
-        return [
+        var objects = [
           0x00AA88, ...State[0] >>> circle,
           0x444444, line,
-          0x000000,
           // pt(-1.8, 1.8), "Stroke: " + lastStroke.toString(),
           // pt(-1.8, 1.6), "Damping: " + lastDamping.toString()
-        ]
+        ];
+        if (showDamping) {
+          var dampingForce = damping(State[1]);
+          var strength = Math.hypot(dampingForce.e1, dampingForce.e2);
+          var intensity = Math.min(strength / 2, 1);
+          var dampingColor = Math.round(211 + 44 * intensity) * 65536
+            + Math.round(211 - 106 * intensity) * 256
+            + Math.round(211 - 31 * intensity);
+          objects.push(dampingColor, State[0] >>> dampingForce);
+        }
+        return objects;
       }, { animate: true, grid: true, lineWidth: 4 })
       canvas.id = 'mycanvas'
       canvasDiv.appendChild(canvas);
