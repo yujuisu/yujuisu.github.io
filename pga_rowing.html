@@ -20,9 +20,8 @@
         }
 
         .damping-control {
-            position: absolute;
-            top: 16px;
-            right: 16px;
+            display: inline-block;
+            margin-left: 0.5em;
             font-size: 0.9rem;
         }
 
@@ -112,7 +111,6 @@
 </head>
 
 <body>
-    <label class="damping-control"><input type="checkbox" id="show-damping"> Show damping</label>
     <article>
         <h1>Simplifying Rowing into a Rigid-Body Dynamical System in Plane-based Geometric Algebra</h1>
 
@@ -169,11 +167,16 @@
             drag are separate scales applied to the velocity components.
         </p>
 
-        <p>\[ F_{\text{drag}} = -\left( k_s\,v_{01}\,\mathbf{e}_{01} + k_l\,v_{02}\,\mathbf{e}_{02} +
-            k_r\,v_{12}\,\mathbf{e}_{12} \right)^{\star} \]</p>
+        <p>
+            \[ F_{\text{drag}} = -\left( k_s\,v_{01}\,\mathbf{e}_{01} + k_l\,v_{02}\,\mathbf{e}_{02} +
+            k_r\,v_{12}\,\mathbf{e}_{12} \right)^{\star} \]
+        </p>
+        <p>
+            Drag force is a line counteracting the momentum. Our lines are oriented. When two lines overlap, the force you draw wants to increase momentum, while the drag wants to decrease. <label class="damping-control"><input type="checkbox" id="show-damping"> show drag force line</label>
+        </p>
 
         <p>
-            Why the dual? Velocity \(V\) is a bivector (a point in 2D PGA: a center of rotation, or an ideal point for
+            Why dual? Velocity \(V\) is a bivector (a point in 2D PGA: a center of rotation, or an ideal point for
             pure translation), while a force is a vector (a line). They are different grades, so the drag must map one
             into the other, and the dual does exactly that. The minus sign makes the drag oppose the motion.
         </p>
